@@ -1,0 +1,258 @@
+---
+title: "Reproducible Data Assignment"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-10-09"
+---
+#Install and Load the required packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tinytex)
+library(ggplot2)
+library(palmerpenguins)
+library(dplyr)
+library(janitor)
+library(ragg)
+
+```
+
+
+## QUESTION 01: Data Visualisation for Science Communication
+
+*Create a figure using the Palmer Penguin dataset that is correct but badly communicates the data. **Do not make a boxplot**.*
+
+*Use the following references to guide you:*
+
+-   [*https://www.nature.com/articles/533452a*](https://www.nature.com/articles/533452a){.uri}
+-   [*https://elifesciences.org/articles/16800*](https://elifesciences.org/articles/16800){.uri}
+
+*Note: Focus on visual elements rather than writing misleading text on it.*
+
+### a) Provide your figure here: I have provided a scatter plot that is correct but badly communicates the data
+
+
+```{r bad figure code, echo=FALSE}
+
+#Load Data that is saved in OneDrive
+
+write.csv(penguins_raw,"/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/data/penguins_raw.csv")
+
+head(penguins_raw)
+
+#Visualise data with a graph badly communicating the data
+
+  ggplot(data = penguins_raw, aes(x = `Culmen.Length..mm.`, y = `Culmen.Depth..mm.`)) +
+  geom_point(cex=6) +
+      labs(x = "Culmen Length (mm)", y = "Culmen Depth (mm)", title = "Scatterplot to show the relationship between Culmen Length and Culmen Depth") +
+    scale_x_continuous(limits = c(30, 65)) +  
+  scale_y_continuous(limits = c(15, 22)) +
+    theme_classic()
+  
+
+
+
+# There is no need to provide the code for your bad figure, just use echo=FALSE so the code is hidden. Make sure your figure is visible after you knit it. 
+
+```
+
+### b) Write about how your design choices mislead the reader about the underlying data (200-300 words).
+
+- add later: add other references in because it is misleading so not reproducible 
+
+There are several design choices I made that make this a misleading and poorly designed graph. Firstly, a graph can be misleading due to manipulated scales (Driessen. et al, 2022). By truncating the y-axis and x-axis to not start at 0, the graph portrays a distorted pattern of the correlation between the two variables. Overall, truncating the axis minimises and clusters the distribution of the data, misleading the reader as they cannot visualise the differences that are representative of the data. Based on this clustering, the reader may be lead to believe that there is little variation between culmen length and culmen depth and obscures the weakly positive correlation it actually portrays.  
+
+Furthermore, the large individual points makes it difficult for individual data points to be distinguished and results in further clustering of the data points,  obscuring the relationship between the variables (Franzblau and Chung, 2012). This prevents the reader from making inferences about the correlation and patterns observed amongst the data points.  Additionally, the lack of grid lines in the background also interferes with the clarity of the scatterplot by making it difficult to interpret individual data points and there exact values. Therefore, the reader is less able to make inferences about specific data points. Overall, the graph makes it difficult to make inferences regarding the relationship between Culmen depth and Culmen length. 
+
+
+*Include references.*
+
+------------------------------------------------------------------------
+
+## QUESTION 2: Data Pipeline
+
+------------------------------------------------------------------------
+
+### Load the Data - load the dataset 'penguins_raw' from the package 'palmer penguins' 
+```{r}
+
+#Load the dataset from my saved location (One Drive)
+
+penguins_raw <- read.csv("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/data/penguins_raw.csv")
+
+```
+
+
+### Cleaning the Data - package code into a function to clean the dataset. 
+```{r}
+
+#First, I checked the column names to see what needs cleaning
+
+names(penguins_raw)
+
+#I used a separate R script containing functions to package the code required to clean the data. This contains code to remove irrelevant columns, change column names to lower case, shorten species names, remove empty columns and rows, and subset data based on species, sex and island. All of this enables a cleaner data set for more efficient analysis.
+
+#I sourced this file from the functions folder of the Penguin_Project folder.  
+
+source("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/data/functions/cleaning (1).r")
+
+#As we want to use multiple functions, I piped them. This prevented me from making any mistakes.
+
+penguins_clean <- penguins_raw %>%
+    clean_function() %>%
+    clean_column_names() %>%
+    shorten_species() %>%
+    remove_empty_columns_rows()
+
+#I tested one of the functions from the file to ensure that it works. Here, I have cleaned the column names by making them all lower case as well as removing Delta.15, Delta.13 and comments since they are irrelevent to our analysis.
+
+names(penguins_raw)
+names(penguins_clean)
+
+#I saved the cleaned in the data folder of the Penguin_Project file (One Drive) to ensure safe storage. 
+write.csv(penguins_clean, "/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/data/penguins_clean.csv")
+```
+
+### Hypothesis - I have provided a null and alternative hypothesis based on variables from the dataset
+
+Null Hypothesis: There is no significant difference between culmen length and culmen depth between male and female Antarctica penguins. 
+Alternative Hypothesis: There is a significant difference between culmen length and culmen depth between male and female Antarctica penguins.
+
+### Exploratory Figure - create an exploratory figure to visualise the distribution of the data
+```{r Data Exploration}
+
+#First, I filtered the data for our chosen variables. I chose culmen depth, culmen length and sex.
+
+culmen_data <- penguins_clean %>%
+  select(c("culmen_length_mm", "culmen_depth_mm", "sex")) %>%
+  na.omit()
+head(culmen_data)
+
+
+#I made an exploratory figure to show the distribution of data and the relationship between the three variables. This figure allows us to gain an initial understanding of the relationship between the variables, the data distribution and also to identify trends and outliers. 
+
+exploratory_plot <- ggplot(culmen_data, aes(x = culmen_length_mm, y = culmen_depth_mm, colour = sex)) +
+  geom_point() +
+  labs(x = "Culmen Length (mm)", y = "Culmen Depth (mm)" ) +
+ggtitle("Culmen length and culmen depth in male and female Antarctica penguins") +
+theme_bw()
+
+exploratory_plot 
+  
+#I saved the Exploratory figure in the figures folder of the Penguin_Project file (One Drive) to ensure safe storage. 
+
+agg_png("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/figures/exploratory_plot.png",
+width = 35, height = 25, units = "cm", res = 600, scaling = 1.5)
+exploratory_plot 
+dev.off()
+
+
+
+```
+## Statistical Methods - use a statistical test to formally test the hypothesis 
+```{r Statistics}
+# Using a linear regression model as this enables us to appropriately analyse the correlation between the two continuous variables of culmen length and depth, and how the categorical variable of sex contributes to the variation observed. Based on the significance of the model, I can either reject or fail to reject my null hypothesis
+
+penguin_linear_model <- lm(culmen_length_mm ~ culmen_depth_mm + sex, data = culmen_data)
+summary(penguin_linear_model)
+```
+### Results Figures - creating a results figure based on my linear regression analysis to visualise the results
+
+```{r Plotting Results}
+
+#I put the plotting code into a file called plotting.r and made the code into a new function. This makes the code neater and easier to follow. I first sourced the plotting.R file that contains the code for the result figures.
+
+source("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/figures/functions/plotting.R")
+
+
+#This is the code to plot the Linear Regression figure showing the regression line for each sex
+
+regression_figure_1 <- plot_regression_figure_1(culmen_data)
+regression_figure_1
+
+#This is the code to plot the Linear Regression figure showing the overall regression line 
+regression_figure_2 <- plot_regression_figure_2(culmen_data)
+regression_figure_2
+
+#I saved the results figures in the figures folder of the Penguin_Project file (One Drive) to ensure safe storage. 
+
+agg_png("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/figures/regression_figure_1.png",
+width = 40, height = 25, units = "cm", res = 600, scaling = 1.5)
+regression_plot_1 
+dev.off()
+
+agg_png("/Users/rithikaravishankar/Library/CloudStorage/OneDrive-Nexus365/Penguin_Project/figures/regression_figure_2.png",
+width = 40, height = 25, units = "cm", res = 600, scaling = 1.5)
+regression_plot_2 
+dev.off()
+
+```
+
+
+
+
+### Discussion
+- separate plot shows difference of sex
+- side note- overall linear regression line shows negative correlation
+- talk about exploratory figure
+- p value on graph
+
+My aim was to investigate the correlation between Culmen depth and Culmen length between male and female penguins. There appears to be sexual dimorphism amongst Antarctic penguins with male culmen lengths, on average, being larger than female culmens (Gorman et al. 2014). I created a hypothesis that 
+
+To investigate my hypothesis, I used a linear regression analysis to assess the relationship between two continuous variables, 'Culmen depth' and 'Culmen length' as well as the categorical variable, 'Sex'. Regression analysis enables us to examine how sex contributes to the explaining the variance. 
+
+Based on my linear regression analysis of my data, there appears to be a significant difference between culmen length and culmen depth between males and females. The positive coefficient estimate of 5.4445 implies that males have a longer culmen length than their female counterparts. Furthermore, a p-value of < 2e-16 is below 0.05, indicating statistical significance and the null hypothesis is rejected.
+
+Additionally, the negative coefficient for culmen depth at -1.1508 indicates that there is a negative correlation with culmen length.  
+
+I decided to provide two plots of the linear regression analysis. In terms of the hypothesis, the plot does show a difference between the culmen depth and length of males and females. Although both have negative correlations, females appear to have lower culmen sizes than their male counterparts. Furthermore, the plot containing the linear regression lines for both sexes, male and female, both show a negative correlation between culmen depth and length, as supported my the statistical analysis. 
+
+It is important to note, that there may be differences amongst species aswell 
+
+Overall, a p-value of < 2.2e-16, is lower than 0.05, indicating statistical significance. Therefore we reject the null hypothesis and infer that there is a significant difference between culmen length and depth between males and females in this dataset.
+
+
+### Conclusion
+The low p-value for the F-statistic at < 2.2e-16 indciates this model is statistically significant. Therefore, I reject the null hypothesis that there is no significant difference between culmen length and depth between males and females in this dataset.
+
+From this statistically significant model, it can be inferred that there is negative correlation between culmen depth and culmen length and male culmen lengths and depths tend to be larger than their female counterparts. 
+
+
+------------------------------------------------------------------------
+
+## QUESTION 3: Open Science
+
+### a) GitHub
+
+*Upload your RProject you created for **Question 2** and any files and subfolders used to GitHub. Do not include any identifiers such as your name. Make sure your GitHub repo is public.*
+
+*GitHub link:*
+
+*You will be marked on your repo organisation and readability.*
+
+### b) Share your repo with a partner, download, and try to run their data pipeline.
+
+*Partner's GitHub link:*
+
+*You **must** provide this so I can verify there is no plagiarism between you and your partner.*
+
+### c) Reflect on your experience running their code. (300-500 words)
+
+-   *What elements of your partner's code helped you to understand their data pipeline?*
+
+-   *Did it run? Did you need to fix anything?*
+
+-   *What suggestions would you make for improving their code to make it more understandable or reproducible, and why?*
+
+-   *If you needed to alter your partner's figure using their code, do you think that would be easy or difficult, and why?*
+
+### d) Reflect on your own code based on your experience with your partner's code and their review of yours. (300-500 words)
+
+-   *What improvements did they suggest, and do you agree?*
+
+-   *What did you learn about writing code for other people?*
+
+
+### References 
